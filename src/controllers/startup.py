@@ -8,7 +8,9 @@ from bosdyn.client.robot_command import RobotCommandClient
 from bosdyn.client.robot_state import RobotStateClient
 from bosdyn.client.image import ImageClient
 
-def setup_robot(spot_ip:str = "192.168.80.3") -> RobotClient:
+LIS_SPOT_IP = "192.168.80.3"
+
+def setup_robot(spot_ip:str = LIS_SPOT_IP) -> RobotClient:
     
     bosdyn.client.util.setup_logging(False)
 
