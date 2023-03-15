@@ -3,8 +3,10 @@
 from typing import List
 
 import numpy as np
-from bosdyn.client.image import (_depth_image_data_to_numpy,
-                                 _depth_image_get_valid_indices)
+from bosdyn.client.image import (
+    _depth_image_data_to_numpy,
+    _depth_image_get_valid_indices,
+)
 
 from spot_utils.structures.image import PointCloud, RGBDImage
 
