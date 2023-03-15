@@ -14,6 +14,8 @@ jobs:
           jupyter: true
       - name: Run isort to organize imports
         uses: isort/isort-action@master
+        with:
+          options: "--split-on-trailing-comma"
   linting:
     runs-on: ubuntu-latest
     strategy:
