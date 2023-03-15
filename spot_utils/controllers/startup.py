@@ -2,17 +2,27 @@ import bosdyn.client
 import bosdyn.client.estop
 import bosdyn.client.lease
 import bosdyn.client.util
+<<<<<<< HEAD
 from bosdyn.client.manipulation_api_client import ManipulationApiClient
 from bosdyn.client.robot_command import RobotCommandClient
 from bosdyn.client.robot_state import RobotStateClient
 from bosdyn.client.image import ImageClient
+=======
+from bosdyn.client.image import ImageClient
+from bosdyn.client.manipulation_api_client import ManipulationApiClient
+from bosdyn.client.robot_command import RobotCommandClient
+from bosdyn.client.robot_state import RobotStateClient
+>>>>>>> fn issues
 
 from spot_utils.structures.robot import RobotClient
 
 LIS_SPOT_IP = "192.168.80.3"
 
 def setup_robot(spot_ip:str = LIS_SPOT_IP) -> RobotClient:
+<<<<<<< HEAD
     
+=======
+>>>>>>> fn issues
     bosdyn.client.util.setup_logging(False)
 
     sdk = bosdyn.client.create_standard_sdk('RobotClient')
