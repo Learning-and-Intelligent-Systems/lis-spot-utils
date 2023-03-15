@@ -1,18 +1,5 @@
 
-<<<<<<< HEAD
-from bosdyn.client.robot_command import RobotCommandBuilder
-from typing import List
-from bosdyn.api import arm_command_pb2
-import time
-from bosdyn.util import duration_to_seconds
-from bosdyn.api import arm_command_pb2, robot_command_pb2, synchronized_command_pb2
-import numpy as np
-from typing import Any
 
-from spot_utils.structures.robot import RobotClient, ArmJointPositions
-from spot_utils.perception.capture import capture_rgbd
-from spot_utils.structures.image import RGBDImage
-=======
 import time
 from typing import Any, List
 
@@ -26,8 +13,6 @@ from spot_utils.perception.capture import capture_rgbd
 from spot_utils.structures.image import RGBDImage
 from spot_utils.structures.robot import ArmJointPositions, RobotClient
 
->>>>>>> fn issues
-
 def open_gripper(robot_client:RobotClient):
     # Make the open gripper RobotCommand
     gripper_command = RobotCommandBuilder.\
@@ -38,16 +23,9 @@ def open_gripper(robot_client:RobotClient):
     robot_client.robot.logger.info('Moving arm to position.')
 
 def print_feedback(feedback_resp:Any, logger:Any):
-<<<<<<< HEAD
     """ Helper function to query for ArmJointMove feedback, and print it to the console.
         Returns the time_to_goal value reported in the feedback """
-=======
-    """Helper function to query for ArmJointMove feedback, and print it to the
-    console.
 
-    Returns the time_to_goal value reported in the feedback
-    """
->>>>>>> fn issues
     joint_move_feedback = feedback_resp.feedback.synchronized_feedback.arm_command_feedback.arm_joint_move_feedback
     logger.info(f'  planner_status = {joint_move_feedback.planner_status}')
     logger.info(
