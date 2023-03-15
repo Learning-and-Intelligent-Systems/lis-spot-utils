@@ -1,4 +1,4 @@
 #!/bin/bash
 python -m black .
-docformatter -i -r .
+docformatter -i -r . --exclude venv
 isort .
