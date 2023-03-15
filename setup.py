@@ -14,7 +14,7 @@ setup(
             "isort",
             "mypy@git+https://github.com/python/mypy.git@9bd651758e8ea2494"
             + "837814092af70f8d9e6f7a1",
-            "mypy_extensions",
+            "docformatter",
         ]
     },
 )
