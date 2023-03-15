@@ -1,9 +1,11 @@
-import sys
 import os
+import sys
+
 try:
     from urllib import urlretrieve
 except ImportError:
     from urllib.request import urlretrieve
+
 import torch
 
 

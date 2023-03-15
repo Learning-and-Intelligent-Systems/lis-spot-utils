@@ -1,4 +1,3 @@
-from structures.robot import RobotClient
 import bosdyn.client
 import bosdyn.client.estop
 import bosdyn.client.lease
@@ -7,6 +6,8 @@ from bosdyn.client.manipulation_api_client import ManipulationApiClient
 from bosdyn.client.robot_command import RobotCommandClient
 from bosdyn.client.robot_state import RobotStateClient
 from bosdyn.client.image import ImageClient
+
+from spot_utils.structures.robot import RobotClient
 
 LIS_SPOT_IP = "192.168.80.3"
 

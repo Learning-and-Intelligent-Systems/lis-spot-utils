@@ -1,69 +1,64 @@
 # System libs
-import os
 import argparse
+import os
+import time
 from distutils.version import LooseVersion
+
 # Numerical libs
 import numpy as np
 import torch
 import torch.nn as nn
-from scipy.io import loadmat
-import csv
 # Our libs
-from mit_semseg.dataset import TestDataset
-from mit_semseg.models import ModelBuilder, SegmentationModule
-from mit_semseg.utils import colorEncode, find_recursive, setup_logger
-from mit_semseg.lib.nn import user_scattered_collate, async_copy_to
-from mit_semseg.lib.utils import as_numpy
-from PIL import Image
-from tqdm import tqdm
 from mit_semseg.config import cfg
+from mit_semseg.dataset import ValDataset
+from mit_semseg.lib.nn import async_copy_to, user_scattered_collate
+from mit_semseg.lib.utils import as_numpy
+from mit_semseg.models import ModelBuilder, SegmentationModule
+from mit_semseg.utils import (AverageMeter, accuracy, colorEncode,
+                              intersectionAndUnion, setup_logger)
+from PIL import Image
+from scipy.io import loadmat
+from tqdm import tqdm
 
 colors = loadmat('data/color150.mat')['colors']
-names = {}
-with open('data/object150_info.csv') as f:
-    reader = csv.reader(f)
-    next(reader)
-    for row in reader:
-        names[int(row[0])] = row[5].split(";")[0]
 
 
-def visualize_result(data, pred, cfg):
-    (img, info) = data
+def visualize_result(data, pred, dir_result):
+    (img, seg, info) = data
 
-    # print predictions in descending order
-    pred = np.int32(pred)
-    pixs = pred.size
-    uniques, counts = np.unique(pred, return_counts=True)
-    print("Predictions in [{}]:".format(info))
-    for idx in np.argsort(counts)[::-1]:
-        name = names[uniques[idx] + 1]
-        ratio = counts[idx] / pixs * 100
-        if ratio > 0.1:
-            print("  {}: {:.2f}%".format(name, ratio))
+    # segmentation
+    seg_color = colorEncode(seg, colors)
 
-    # colorize prediction
-    pred_color = colorEncode(pred, colors).astype(np.uint8)
+    # prediction
+    pred_color = colorEncode(pred, colors)
 
     # aggregate images and save
-    im_vis = np.concatenate((img, pred_color), axis=1)
+    im_vis = np.concatenate((img, seg_color, pred_color),
+                            axis=1).astype(np.uint8)
 
     img_name = info.split('/')[-1]
-    Image.fromarray(im_vis).save(
-        os.path.join(cfg.TEST.result, img_name.replace('.jpg', '.png')))
+    Image.fromarray(im_vis).save(os.path.join(dir_result, img_name.replace('.jpg', '.png')))
 
 
-def test(segmentation_module, loader, gpu):
+def evaluate(segmentation_module, loader, cfg, gpu):
+    acc_meter = AverageMeter()
+    intersection_meter = AverageMeter()
+    union_meter = AverageMeter()
+    time_meter = AverageMeter()
+
     segmentation_module.eval()
 
     pbar = tqdm(total=len(loader))
     for batch_data in loader:
         # process data
         batch_data = batch_data[0]
-        segSize = (batch_data['img_ori'].shape[0],
-                   batch_data['img_ori'].shape[1])
+        seg_label = as_numpy(batch_data['seg_label'][0])
         img_resized_list = batch_data['img_data']
 
+        torch.cuda.synchronize()
+        tic = time.perf_counter()
         with torch.no_grad():
+            segSize = (seg_label.shape[0], seg_label.shape[1])
             scores = torch.zeros(1, cfg.DATASET.num_class, segSize[0], segSize[1])
             scores = async_copy_to(scores, gpu)
 
@@ -75,20 +70,40 @@ def test(segmentation_module, loader, gpu):
                 feed_dict = async_copy_to(feed_dict, gpu)
 
                 # forward pass
-                pred_tmp = segmentation_module(feed_dict, segSize=segSize)
-                scores = scores + pred_tmp / len(cfg.DATASET.imgSizes)
+                scores_tmp = segmentation_module(feed_dict, segSize=segSize)
+                scores = scores + scores_tmp / len(cfg.DATASET.imgSizes)
 
             _, pred = torch.max(scores, dim=1)
             pred = as_numpy(pred.squeeze(0).cpu())
 
+        torch.cuda.synchronize()
+        time_meter.update(time.perf_counter() - tic)
+
+        # calculate accuracy
+        acc, pix = accuracy(pred, seg_label)
+        intersection, union = intersectionAndUnion(pred, seg_label, cfg.DATASET.num_class)
+        acc_meter.update(acc, pix)
+        intersection_meter.update(intersection)
+        union_meter.update(union)
+
         # visualization
-        visualize_result(
-            (batch_data['img_ori'], batch_data['info']),
-            pred,
-            cfg
-        )
+        if cfg.VAL.visualize:
+            visualize_result(
+                (batch_data['img_ori'], seg_label, batch_data['info']),
+                pred,
+                os.path.join(cfg.DIR, 'result')
+            )
 
         pbar.update(1)
+
+    # summary
+    iou = intersection_meter.sum / (union_meter.sum + 1e-10)
+    for i, _iou in enumerate(iou):
+        print('class [{}], IoU: {:.4f}'.format(i, _iou))
+
+    print('[Eval Summary]:')
+    print('Mean IoU: {:.4f}, Accuracy: {:.2f}%, Inference Time: {:.4f}s'
+          .format(iou.mean(), acc_meter.average()*100, time_meter.average()))
 
 
 def main(cfg, gpu):
@@ -96,11 +111,11 @@ def main(cfg, gpu):
 
     # Network Builders
     net_encoder = ModelBuilder.build_encoder(
-        arch=cfg.MODEL.arch_encoder,
+        arch=cfg.MODEL.arch_encoder.lower(),
         fc_dim=cfg.MODEL.fc_dim,
         weights=cfg.MODEL.weights_encoder)
     net_decoder = ModelBuilder.build_decoder(
-        arch=cfg.MODEL.arch_decoder,
+        arch=cfg.MODEL.arch_decoder.lower(),
         fc_dim=cfg.MODEL.fc_dim,
         num_class=cfg.DATASET.num_class,
         weights=cfg.MODEL.weights_decoder,
@@ -111,12 +126,13 @@ def main(cfg, gpu):
     segmentation_module = SegmentationModule(net_encoder, net_decoder, crit)
 
     # Dataset and Loader
-    dataset_test = TestDataset(
-        cfg.list_test,
+    dataset_val = ValDataset(
+        cfg.DATASET.root_dataset,
+        cfg.DATASET.list_val,
         cfg.DATASET)
-    loader_test = torch.utils.data.DataLoader(
-        dataset_test,
-        batch_size=cfg.TEST.batch_size,
+    loader_val = torch.utils.data.DataLoader(
+        dataset_val,
+        batch_size=cfg.VAL.batch_size,
         shuffle=False,
         collate_fn=user_scattered_collate,
         num_workers=5,
@@ -125,9 +141,9 @@ def main(cfg, gpu):
     segmentation_module.cuda()
 
     # Main loop
-    test(segmentation_module, loader_test, gpu)
+    evaluate(segmentation_module, loader_val, cfg, gpu)
 
-    print('Inference done!')
+    print('Evaluation Done!')
 
 
 if __name__ == '__main__':
@@ -135,13 +151,7 @@ if __name__ == '__main__':
         'PyTorch>=0.4.0 is required'
 
     parser = argparse.ArgumentParser(
-        description="PyTorch Semantic Segmentation Testing"
-    )
-    parser.add_argument(
-        "--imgs",
-        required=True,
-        type=str,
-        help="an image path, or a directory name"
+        description="PyTorch Semantic Segmentation Validation"
     )
     parser.add_argument(
         "--cfg",
@@ -153,8 +163,7 @@ if __name__ == '__main__':
     parser.add_argument(
         "--gpu",
         default=0,
-        type=int,
-        help="gpu id for evaluation"
+        help="gpu to use"
     )
     parser.add_argument(
         "opts",
@@ -172,27 +181,15 @@ if __name__ == '__main__':
     logger.info("Loaded configuration file {}".format(args.cfg))
     logger.info("Running with config:\n{}".format(cfg))
 
-    cfg.MODEL.arch_encoder = cfg.MODEL.arch_encoder.lower()
-    cfg.MODEL.arch_decoder = cfg.MODEL.arch_decoder.lower()
-
     # absolute paths of model weights
     cfg.MODEL.weights_encoder = os.path.join(
-        cfg.DIR, 'encoder_' + cfg.TEST.checkpoint)
+        cfg.DIR, 'encoder_' + cfg.VAL.checkpoint)
     cfg.MODEL.weights_decoder = os.path.join(
-        cfg.DIR, 'decoder_' + cfg.TEST.checkpoint)
-
+        cfg.DIR, 'decoder_' + cfg.VAL.checkpoint)
     assert os.path.exists(cfg.MODEL.weights_encoder) and \
         os.path.exists(cfg.MODEL.weights_decoder), "checkpoint does not exitst!"
 
-    # generate testing image list
-    if os.path.isdir(args.imgs):
-        imgs = find_recursive(args.imgs)
-    else:
-        imgs = [args.imgs]
-    assert len(imgs), "imgs should be a path to image (.jpg) or directory."
-    cfg.list_test = [{'fpath_img': x} for x in imgs]
-
-    if not os.path.isdir(cfg.TEST.result):
-        os.makedirs(cfg.TEST.result)
+    if not os.path.isdir(os.path.join(cfg.DIR, "result")):
+        os.makedirs(os.path.join(cfg.DIR, "result"))
 
     main(cfg, args.gpu)

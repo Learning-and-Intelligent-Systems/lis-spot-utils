@@ -1,14 +1,16 @@
-"""
-This HRNet implementation is modified from the following repository:
+"""This HRNet implementation is modified from the following repository:
+
 https://github.com/HRNet/HRNet-Semantic-Segmentation
 """
 
 import logging
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from .utils import load_url
 from mit_semseg.lib.nn import SynchronizedBatchNorm2d
+
+from .utils import load_url
 
 BatchNorm2d = SynchronizedBatchNorm2d
 BN_MOMENTUM = 0.1
@@ -24,7 +26,7 @@ model_urls = {
 
 
 def conv3x3(in_planes, out_planes, stride=1):
-    """3x3 convolution with padding"""
+    """3x3 convolution with padding."""
     return nn.Conv2d(in_planes, out_planes, kernel_size=3, stride=stride,
                      padding=1, bias=False)
 

@@ -1,7 +1,10 @@
-import torch.nn as nn
 import math
-from .utils import load_url
+
+import torch.nn as nn
 from mit_semseg.lib.nn import SynchronizedBatchNorm2d
+
+from .utils import load_url
+
 BatchNorm2d = SynchronizedBatchNorm2d
 
 
@@ -93,7 +96,6 @@ class Bottleneck(nn.Module):
 
 
 class ResNet(nn.Module):
-
     def __init__(self, block, layers, num_classes=1000):
         self.inplanes = 128
         super(ResNet, self).__init__()

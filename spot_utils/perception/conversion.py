@@ -1,9 +1,9 @@
-from structures.image import RGBDImage
 from bosdyn.client.image import _depth_image_get_valid_indices, \
     _depth_image_data_to_numpy
-from structures.image import PointCloud
 import numpy as np
 from typing import List
+
+from structures.image import RGBDImage, PointCloud
 
 def rgbd_to_pointcloud(rgbd:RGBDImage, min_dist:int=0, max_dist:int=1000) -> PointCloud:
 

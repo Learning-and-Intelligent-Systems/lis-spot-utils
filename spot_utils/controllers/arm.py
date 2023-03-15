@@ -1,14 +1,16 @@
 
 from bosdyn.client.robot_command import RobotCommandBuilder
-from structures.robot import RobotClient, ArmJointPositions
-from perception.capture import capture_rgbd
-from structures.image import RGBDImage
 from typing import List
 from bosdyn.api import arm_command_pb2
 import time
 from bosdyn.util import duration_to_seconds
 from bosdyn.api import arm_command_pb2, robot_command_pb2, synchronized_command_pb2
 import numpy as np
+from typing import Any
+
+from spot_utils.structures.robot import RobotClient, ArmJointPositions
+from spot_utils.perception.capture import capture_rgbd
+from spot_utils.structures.image import RGBDImage
 
 def open_gripper(robot_client:RobotClient):
     # Make the open gripper RobotCommand
@@ -19,7 +21,7 @@ def open_gripper(robot_client:RobotClient):
     _ = robot_client.command_client.robot_command(gripper_command)
     robot_client.robot.logger.info('Moving arm to position.')
 
-def print_feedback(feedback_resp, logger):
+def print_feedback(feedback_resp:Any, logger:Any):
     """ Helper function to query for ArmJointMove feedback, and print it to the console.
         Returns the time_to_goal value reported in the feedback """
     joint_move_feedback = feedback_resp.feedback.synchronized_feedback.arm_command_feedback.arm_joint_move_feedback
@@ -52,10 +54,6 @@ def move_arm(robot_client:RobotClient, arm_pos:ArmJointPositions):
 
     # Query for feedback to determine how long the goto will take.
     feedback_resp = robot_client.command_client.robot_command_feedback(cmd_id)
-    print("Feedback resp type")
-    print(type(feedback_resp))
-    print("Logger type")
-    print(type(robot_client.robot.logger))
     robot_client.robot.logger.info("Feedback for Example 1: single point goto")
     time_to_goal = print_feedback(feedback_resp, robot_client.robot.logger)
     time.sleep(time_to_goal)

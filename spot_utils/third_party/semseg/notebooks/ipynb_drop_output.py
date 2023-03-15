@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
-"""
-Suppress output and prompt numbers in git version control.
+"""Suppress output and prompt numbers in git version control.
 
 This script will tell git to ignore prompt numbers and cell output
 when looking at ipynb files UNLESS their metadata contains:
@@ -16,14 +15,14 @@ Usage instructions
 ==================
 
 1. Put this script in a directory that is on the system's path.
-   For future reference, I will assume you saved it in 
+   For future reference, I will assume you saved it in
    `~/scripts/ipynb_drop_output`.
 2. Make sure it is executable by typing the command
    `chmod +x ~/scripts/ipynb_drop_output`.
 3. Register a filter for ipython notebooks by
    putting the following line in `~/.config/git/attributes`:
    `*.ipynb  filter=clean_ipynb`
-4. Connect this script to the filter by running the following 
+4. Connect this script to the filter by running the following
    git commands:
 
    git config --global filter.clean_ipynb.clean ipynb_drop_output
@@ -54,13 +53,13 @@ Notes
 
 Changed by David Bau to make stripping output the default.
 
-This script is inspired by http://stackoverflow.com/a/20844506/827862, but 
+This script is inspired by http://stackoverflow.com/a/20844506/827862, but
 lets the user specify whether the ouptut of a notebook should be kept
 in the notebook's metadata, and works for IPython v3.0.
 """
 
-import sys
 import json
+import sys
 
 nb = sys.stdin.read()
 

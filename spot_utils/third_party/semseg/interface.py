@@ -1,10 +1,11 @@
-import numpy as np
-import torch
+import csv
 import sys
+
+import numpy as np
 import PIL.Image
+import torch
 import torchvision
 from scipy import io
-import csv
 
 sys.path.extend(["./"])
 from mit_semseg.models import ModelBuilder, SegmentationModule

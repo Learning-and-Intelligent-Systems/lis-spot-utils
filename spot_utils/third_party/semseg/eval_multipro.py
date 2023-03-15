@@ -1,21 +1,25 @@
 # System libs
-import os
-import time
 import argparse
+import math
+import os
 from distutils.version import LooseVersion
+from multiprocessing import Process, Queue
+
 # Numerical libs
 import numpy as np
 import torch
 import torch.nn as nn
-from scipy.io import loadmat
 # Our libs
 from mit_semseg.config import cfg
 from mit_semseg.dataset import ValDataset
-from mit_semseg.models import ModelBuilder, SegmentationModule
-from mit_semseg.utils import AverageMeter, colorEncode, accuracy, intersectionAndUnion, setup_logger
-from mit_semseg.lib.nn import user_scattered_collate, async_copy_to
+from mit_semseg.lib.nn import async_copy_to, user_scattered_collate
 from mit_semseg.lib.utils import as_numpy
+from mit_semseg.models import ModelBuilder, SegmentationModule
+from mit_semseg.utils import (AverageMeter, accuracy, colorEncode,
+                              intersectionAndUnion, parse_devices,
+                              setup_logger)
 from PIL import Image
+from scipy.io import loadmat
 from tqdm import tqdm
 
 colors = loadmat('data/color150.mat')['colors']
@@ -38,34 +42,26 @@ def visualize_result(data, pred, dir_result):
     Image.fromarray(im_vis).save(os.path.join(dir_result, img_name.replace('.jpg', '.png')))
 
 
-def evaluate(segmentation_module, loader, cfg, gpu):
-    acc_meter = AverageMeter()
-    intersection_meter = AverageMeter()
-    union_meter = AverageMeter()
-    time_meter = AverageMeter()
-
+def evaluate(segmentation_module, loader, cfg, gpu_id, result_queue):
     segmentation_module.eval()
 
-    pbar = tqdm(total=len(loader))
     for batch_data in loader:
         # process data
         batch_data = batch_data[0]
         seg_label = as_numpy(batch_data['seg_label'][0])
         img_resized_list = batch_data['img_data']
 
-        torch.cuda.synchronize()
-        tic = time.perf_counter()
         with torch.no_grad():
             segSize = (seg_label.shape[0], seg_label.shape[1])
             scores = torch.zeros(1, cfg.DATASET.num_class, segSize[0], segSize[1])
-            scores = async_copy_to(scores, gpu)
+            scores = async_copy_to(scores, gpu_id)
 
             for img in img_resized_list:
                 feed_dict = batch_data.copy()
                 feed_dict['img_data'] = img
                 del feed_dict['img_ori']
                 del feed_dict['info']
-                feed_dict = async_copy_to(feed_dict, gpu)
+                feed_dict = async_copy_to(feed_dict, gpu_id)
 
                 # forward pass
                 scores_tmp = segmentation_module(feed_dict, segSize=segSize)
@@ -74,15 +70,10 @@ def evaluate(segmentation_module, loader, cfg, gpu):
             _, pred = torch.max(scores, dim=1)
             pred = as_numpy(pred.squeeze(0).cpu())
 
-        torch.cuda.synchronize()
-        time_meter.update(time.perf_counter() - tic)
-
-        # calculate accuracy
+        # calculate accuracy and SEND THEM TO MASTER
         acc, pix = accuracy(pred, seg_label)
         intersection, union = intersectionAndUnion(pred, seg_label, cfg.DATASET.num_class)
-        acc_meter.update(acc, pix)
-        intersection_meter.update(intersection)
-        union_meter.update(union)
+        result_queue.put_nowait((acc, pix, intersection, union))
 
         # visualization
         if cfg.VAL.visualize:
@@ -92,20 +83,22 @@ def evaluate(segmentation_module, loader, cfg, gpu):
                 os.path.join(cfg.DIR, 'result')
             )
 
-        pbar.update(1)
 
-    # summary
-    iou = intersection_meter.sum / (union_meter.sum + 1e-10)
-    for i, _iou in enumerate(iou):
-        print('class [{}], IoU: {:.4f}'.format(i, _iou))
+def worker(cfg, gpu_id, start_idx, end_idx, result_queue):
+    torch.cuda.set_device(gpu_id)
 
-    print('[Eval Summary]:')
-    print('Mean IoU: {:.4f}, Accuracy: {:.2f}%, Inference Time: {:.4f}s'
-          .format(iou.mean(), acc_meter.average()*100, time_meter.average()))
-
-
-def main(cfg, gpu):
-    torch.cuda.set_device(gpu)
+    # Dataset and Loader
+    dataset_val = ValDataset(
+        cfg.DATASET.root_dataset,
+        cfg.DATASET.list_val,
+        cfg.DATASET,
+        start_idx=start_idx, end_idx=end_idx)
+    loader_val = torch.utils.data.DataLoader(
+        dataset_val,
+        batch_size=cfg.VAL.batch_size,
+        shuffle=False,
+        collate_fn=user_scattered_collate,
+        num_workers=2)
 
     # Network Builders
     net_encoder = ModelBuilder.build_encoder(
@@ -123,23 +116,58 @@ def main(cfg, gpu):
 
     segmentation_module = SegmentationModule(net_encoder, net_decoder, crit)
 
-    # Dataset and Loader
-    dataset_val = ValDataset(
-        cfg.DATASET.root_dataset,
-        cfg.DATASET.list_val,
-        cfg.DATASET)
-    loader_val = torch.utils.data.DataLoader(
-        dataset_val,
-        batch_size=cfg.VAL.batch_size,
-        shuffle=False,
-        collate_fn=user_scattered_collate,
-        num_workers=5,
-        drop_last=True)
-
     segmentation_module.cuda()
 
     # Main loop
-    evaluate(segmentation_module, loader_val, cfg, gpu)
+    evaluate(segmentation_module, loader_val, cfg, gpu_id, result_queue)
+
+
+def main(cfg, gpus):
+    with open(cfg.DATASET.list_val, 'r') as f:
+        lines = f.readlines()
+        num_files = len(lines)
+
+    num_files_per_gpu = math.ceil(num_files / len(gpus))
+
+    pbar = tqdm(total=num_files)
+
+    acc_meter = AverageMeter()
+    intersection_meter = AverageMeter()
+    union_meter = AverageMeter()
+
+    result_queue = Queue(500)
+    procs = []
+    for idx, gpu_id in enumerate(gpus):
+        start_idx = idx * num_files_per_gpu
+        end_idx = min(start_idx + num_files_per_gpu, num_files)
+        proc = Process(target=worker, args=(cfg, gpu_id, start_idx, end_idx, result_queue))
+        print('gpu:{}, start_idx:{}, end_idx:{}'.format(gpu_id, start_idx, end_idx))
+        proc.start()
+        procs.append(proc)
+
+    # master fetches results
+    processed_counter = 0
+    while processed_counter < num_files:
+        if result_queue.empty():
+            continue
+        (acc, pix, intersection, union) = result_queue.get()
+        acc_meter.update(acc, pix)
+        intersection_meter.update(intersection)
+        union_meter.update(union)
+        processed_counter += 1
+        pbar.update(1)
+
+    for p in procs:
+        p.join()
+
+    # summary
+    iou = intersection_meter.sum / (union_meter.sum + 1e-10)
+    for i, _iou in enumerate(iou):
+        print('class [{}], IoU: {:.4f}'.format(i, _iou))
+
+    print('[Eval Summary]:')
+    print('Mean IoU: {:.4f}, Accuracy: {:.2f}%'
+          .format(iou.mean(), acc_meter.average()*100))
 
     print('Evaluation Done!')
 
@@ -159,9 +187,9 @@ if __name__ == '__main__':
         type=str,
     )
     parser.add_argument(
-        "--gpu",
-        default=0,
-        help="gpu to use"
+        "--gpus",
+        default="0-3",
+        help="gpus to use, e.g. 0-3 or 0,1,2,3"
     )
     parser.add_argument(
         "opts",
@@ -190,4 +218,9 @@ if __name__ == '__main__':
     if not os.path.isdir(os.path.join(cfg.DIR, "result")):
         os.makedirs(os.path.join(cfg.DIR, "result"))
 
-    main(cfg, args.gpu)
+    # Parse gpu ids
+    gpus = parse_devices(args.gpus)
+    gpus = [x.replace('gpu', '') for x in gpus]
+    gpus = [int(x) for x in gpus]
+
+    main(cfg, gpus)

@@ -1,9 +1,10 @@
-import sys
-import os
-import logging
-import re
-import functools
 import fnmatch
+import functools
+import logging
+import os
+import re
+import sys
+
 import numpy as np
 
 
@@ -31,7 +32,7 @@ def find_recursive(root_dir, ext='.jpg'):
 
 
 class AverageMeter(object):
-    """Computes and stores the average and current value"""
+    """Computes and stores the average and current value."""
     def __init__(self):
         self.initialized = False
         self.val = None
@@ -178,10 +179,9 @@ REGEX = [
 
 
 def parse_devices(input_devices):
-
     """Parse user's devices input str to standard format.
-    e.g. [gpu0, gpu1, ...]
 
+    e.g. [gpu0, gpu1, ...]
     """
     ret = []
     for d in input_devices.split(','):

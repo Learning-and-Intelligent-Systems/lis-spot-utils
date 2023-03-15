@@ -1,9 +1,10 @@
-import os
 import json
-import torch
-from torchvision import transforms
+import os
+
 import numpy as np
+import torch
 from PIL import Image
+from torchvision import transforms
 
 
 def imresize(im, size, interp='bilinear'):

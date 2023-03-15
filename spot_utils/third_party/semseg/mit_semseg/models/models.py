@@ -1,7 +1,9 @@
 import torch
 import torch.nn as nn
-from . import resnet, resnext, mobilenet, hrnet
 from mit_semseg.lib.nn import SynchronizedBatchNorm2d
+
+from . import hrnet, mobilenet, resnet, resnext
+
 BatchNorm2d = SynchronizedBatchNorm2d
 
 
