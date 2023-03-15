@@ -3,7 +3,7 @@ open3d."""
 
 import open3d as o3d
 
-from spot_utils.controllers.arm import scan_room
+from spot_utils.controllers.arm_control import scan_room
 from spot_utils.controllers.startup import setup_robot
 from spot_utils.perception.conversion import rgbds_to_pointcloud
 from spot_utils.perception.segmentation import scene_segment_image

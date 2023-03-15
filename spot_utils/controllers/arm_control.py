@@ -24,7 +24,7 @@ def open_gripper(robot_client: RobotClient):
     robot_client.robot.logger.info("Moving arm to position.")
 
 
-def print_feedback(feedback_resp: Any, logger: Any):
+def print_feedback(feedback_resp: Any, logger: Any) -> float:
     """Helper function to query for ArmJointMove feedback, and print it to the
     console.
 
