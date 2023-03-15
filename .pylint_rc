@@ -7,10 +7,10 @@ extension-pkg-whitelist=numpy,pybullet,torch,tensorflow,pyrealsense2
 
 # Add files or directories to the blacklist. They should be base names, not
 # paths.
-ignore=CVS,venv,src/perception/vision_utils
+ignore=CVS,venv
 
 # Add paths to the blacklist.
-ignore-paths=
+ignore-paths=src/perception/vision_utils
 
 # Add files or directories matching the regex patterns to the blacklist. The
 # regex matches against base names, not paths.
