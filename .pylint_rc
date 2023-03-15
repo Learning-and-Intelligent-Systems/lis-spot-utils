@@ -7,10 +7,10 @@ extension-pkg-whitelist=numpy,pybullet,torch,tensorflow,pyrealsense2
 
 # Add files or directories to the blacklist. They should be base names, not
 # paths.
-ignore=CVS,venv
+ignore=CVS,venv,spot_utils/perception/vision_utils
 
 # Add paths to the blacklist.
-ignore-paths=src/perception/vision_utils
+ignore-paths=
 
 # Add files or directories matching the regex patterns to the blacklist. The
 # regex matches against base names, not paths.
@@ -294,7 +294,7 @@ ignored-classes=optparse.Values,thread._local,_thread._local
 # (useful for modules/projects where namespaces are manipulated during runtime
 # and thus existing member attributes cannot be deduced by static analysis. It
 # supports qualified module names, as well as Unix pattern matching.
-ignored-modules=
+ignored-modules=mit_semseg,semseg
 
 # Show a hint with possible names when a member name was not found. The aspect
 # of finding the hint is based on edit distance.
