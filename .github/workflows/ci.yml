@@ -3,7 +3,7 @@ name: CI Checks
 on: [push]
 
 jobs:
-  lint:
+  autoformat:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -14,6 +14,27 @@ jobs:
           jupyter: true
       - name: Run isort to organize imports
         uses: isort/isort-action@master
+  linting:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.8]
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+        cache: 'pip'
+        cache-dependency-path: '**/setup.py'
+    - name: Install dependencies
+      run: |
+        pip install -e .
+        pip install pylint
+        pip install pytest-pylint
+    - name: Lint
+      run: |
+        pytest . --pylint -m pylint --pylint-rcfile=.pylintrc
   static-type-checking:
     runs-on: ubuntu-latest
     strategy:
@@ -30,8 +51,7 @@ jobs:
     - name: Install dependencies
       run: |
         pip install -e .
-        pip install -U git+https://github.com/python/mypy.git@9a10967fdaa2ac077383b9eccded42829479ef31
-      # Note: if mypy issue #5485 gets resolved, we can install from head again.
+        pip install mypy
     - name: Mypy
       run: |
         mypy . --config-file mypy.ini
