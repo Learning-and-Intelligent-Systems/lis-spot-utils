@@ -12,7 +12,6 @@ jobs:
         with:
           options: "--check --verbose"
           jupyter: true
-          version: "21.5b1"
       - name: Run isort to organize imports
         uses: isort/isort-action@master
   static-type-checking:
