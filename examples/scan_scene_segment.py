@@ -1,16 +1,14 @@
+"""Scan the scene using only the gripper camera and visualize the pointcloud in
+open3d."""
 
-from controllers.startup import setup_robot
-from controllers.arm import scan_room
-from perception.conversion import rgbds_to_pointcloud
-from perception.segmentation import scene_segment_image
 import open3d as o3d
 
-if __name__ == "__main__":
-    """
-        Scan the scene using only the gripper 
-        camera and visualize the pointcloud in open3d
-    """
+from spot_utils.controllers.arm import scan_room
+from spot_utils.controllers.startup import setup_robot
+from spot_utils.perception.conversion import rgbds_to_pointcloud
+from spot_utils.perception.segmentation import scene_segment_image
 
+if __name__ == "__main__":
     robot_client = setup_robot()
     rgbds = scan_room(robot_client, num_images=20)
     segmented_rgbs = [scene_segment_image(rgbd) for rgbd in rgbds]
@@ -21,4 +19,3 @@ if __name__ == "__main__":
     point_cloud.colors = o3d.utility.Vector3dVector(pointcloud.points_rgb)
 
     o3d.visualization.draw_geometries([point_cloud])
-    

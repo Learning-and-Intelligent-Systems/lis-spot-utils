@@ -1,23 +1,31 @@
+"""Functions for converting between data types."""
 
-from bosdyn.client.image import _depth_image_get_valid_indices, \
-    _depth_image_data_to_numpy
-import numpy as np
 from typing import List
 
-from structures.image import RGBDImage, PointCloud
+import numpy as np
+from bosdyn.client.image import (_depth_image_data_to_numpy,
+                                 _depth_image_get_valid_indices)
 
-def rgbd_to_pointcloud(rgbd:RGBDImage, min_dist:int=0, max_dist:int=1000) -> PointCloud:
+from spot_utils.structures.image import PointCloud, RGBDImage
+
+
+def rgbd_to_pointcloud(
+    rgbd: RGBDImage, min_dist: int = 0, max_dist: int = 1000
+) -> PointCloud:
+    """Converts a single rgbd image to a pointcloud."""
 
     # Convert the proto representation into a numpy array.
     depth_array = _depth_image_data_to_numpy(rgbd.depth)
 
     # Determine which indices have valid data in the user requested range.
-    valid_inds = _depth_image_get_valid_indices(depth_array, 
-                                                np.rint(min_dist * rgbd.depth_scale),
-                                                np.rint(max_dist * rgbd.depth_scale))
+    valid_inds = _depth_image_get_valid_indices(
+        depth_array,
+        np.rint(min_dist * rgbd.depth_scale),
+        np.rint(max_dist * rgbd.depth_scale),
+    )
 
     # Compute the valid data.
-    rows, cols = np.mgrid[0:rgbd.intrinsics.rows, 0:rgbd.intrinsics.cols]
+    rows, cols = np.mgrid[0 : rgbd.intrinsics.rows, 0 : rgbd.intrinsics.cols]
     depth_array = depth_array[valid_inds]
     rows = rows[valid_inds]
     cols = cols[valid_inds]
@@ -32,9 +40,13 @@ def rgbd_to_pointcloud(rgbd:RGBDImage, min_dist:int=0, max_dist:int=1000) -> Poi
     rgb = np.array(cv_visual[rows, cols])
     xyz = np.vstack((x, y, z)).T
 
-    return PointCloud(xyz=rgbd.frame.transform_cloud(np.array(xyz)), rgb=rgb) 
+    return PointCloud(rgbd.frame.transform_cloud(np.array(xyz)), rgb)
 
-def rgbds_to_pointcloud(rgbds:List[RGBDImage]) -> PointCloud:
+
+def rgbds_to_pointcloud(rgbds: List[RGBDImage]) -> PointCloud:
+    """Converts a set of rgbd images to a global pointcloud."""
     local_pointclouds = [rgbd_to_pointcloud(rgbd) for rgbd in rgbds]
-    return PointCloud(xyz=np.concatenate([p.xyz for p in local_pointclouds], axis=0),
-                      rgb=np.concatenate([p.rgb for p in local_pointclouds], axis=0))
+    return PointCloud(
+        np.concatenate([p.xyz for p in local_pointclouds], axis=0),
+        np.concatenate([p.rgb for p in local_pointclouds], axis=0),
+    )

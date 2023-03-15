@@ -23,16 +23,17 @@ def setup_logger(distributed_rank=0, filename="log.txt"):
     return logger
 
 
-def find_recursive(root_dir, ext='.jpg'):
+def find_recursive(root_dir, ext=".jpg"):
     files = []
     for root, dirnames, filenames in os.walk(root_dir):
-        for filename in fnmatch.filter(filenames, '*' + ext):
+        for filename in fnmatch.filter(filenames, "*" + ext):
             files.append(os.path.join(root, filename))
     return files
 
 
 class AverageMeter(object):
     """Computes and stores the average and current value."""
+
     def __init__(self):
         self.initialized = False
         self.val = None
@@ -85,7 +86,7 @@ def unique(ar, return_index=False, return_inverse=False, return_counts=False):
                 ret += (np.empty(0, np.intp),)
         return ret
     if optional_indices:
-        perm = ar.argsort(kind='mergesort' if return_index else 'quicksort')
+        perm = ar.argsort(kind="mergesort" if return_index else "quicksort")
         aux = ar[perm]
     else:
         ar.sort()
@@ -109,25 +110,24 @@ def unique(ar, return_index=False, return_inverse=False, return_counts=False):
     return ret
 
 
-def colorEncode(labelmap, colors, mode='RGB'):
-    labelmap = labelmap.astype('int')
-    labelmap_rgb = np.zeros((labelmap.shape[0], labelmap.shape[1], 3),
-                            dtype=np.uint8)
+def colorEncode(labelmap, colors, mode="RGB"):
+    labelmap = labelmap.astype("int")
+    labelmap_rgb = np.zeros((labelmap.shape[0], labelmap.shape[1], 3), dtype=np.uint8)
     for label in unique(labelmap):
         if label < 0:
             continue
-        labelmap_rgb += (labelmap == label)[:, :, np.newaxis] * \
-            np.tile(colors[label],
-                    (labelmap.shape[0], labelmap.shape[1], 1))
+        labelmap_rgb += (labelmap == label)[:, :, np.newaxis] * np.tile(
+            colors[label], (labelmap.shape[0], labelmap.shape[1], 1)
+        )
 
-    if mode == 'BGR':
+    if mode == "BGR":
         return labelmap_rgb[:, :, ::-1]
     else:
         return labelmap_rgb
 
 
 def accuracy(preds, label):
-    valid = (label >= 0)
+    valid = label >= 0
     acc_sum = (valid * (preds == label)).sum()
     valid_sum = valid.sum()
     acc = float(acc_sum) / (valid_sum + 1e-10)
@@ -147,7 +147,8 @@ def intersectionAndUnion(imPred, imLab, numClass):
     # Compute area intersection:
     intersection = imPred * (imPred == imLab)
     (area_intersection, _) = np.histogram(
-        intersection, bins=numClass, range=(1, numClass))
+        intersection, bins=numClass, range=(1, numClass)
+    )
 
     # Compute area union:
     (area_pred, _) = np.histogram(imPred, bins=numClass, range=(1, numClass))
@@ -165,16 +166,14 @@ def process_range(xpu, inp):
     start, end = map(int, inp)
     if start > end:
         end, start = start, end
-    return map(lambda x: '{}{}'.format(xpu, x), range(start, end+1))
+    return map(lambda x: "{}{}".format(xpu, x), range(start, end + 1))
 
 
 REGEX = [
-    (re.compile(r'^gpu(\d+)$'), lambda x: ['gpu%s' % x[0]]),
-    (re.compile(r'^(\d+)$'), lambda x: ['gpu%s' % x[0]]),
-    (re.compile(r'^gpu(\d+)-(?:gpu)?(\d+)$'),
-     functools.partial(process_range, 'gpu')),
-    (re.compile(r'^(\d+)-(\d+)$'),
-     functools.partial(process_range, 'gpu')),
+    (re.compile(r"^gpu(\d+)$"), lambda x: ["gpu%s" % x[0]]),
+    (re.compile(r"^(\d+)$"), lambda x: ["gpu%s" % x[0]]),
+    (re.compile(r"^gpu(\d+)-(?:gpu)?(\d+)$"), functools.partial(process_range, "gpu")),
+    (re.compile(r"^(\d+)-(\d+)$"), functools.partial(process_range, "gpu")),
 ]
 
 
@@ -184,7 +183,7 @@ def parse_devices(input_devices):
     e.g. [gpu0, gpu1, ...]
     """
     ret = []
-    for d in input_devices.split(','):
+    for d in input_devices.split(","):
         for regex, func in REGEX:
             m = regex.match(d.lower().strip())
             if m:
@@ -195,6 +194,5 @@ def parse_devices(input_devices):
                         ret.append(x)
                 break
         else:
-            raise NotSupportedCliException(
-                'Can not recognize device: "{}"'.format(d))
+            raise NotSupportedCliException('Can not recognize device: "{}"'.format(d))
     return ret

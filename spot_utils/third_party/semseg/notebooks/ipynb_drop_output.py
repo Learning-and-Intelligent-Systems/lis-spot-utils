@@ -71,10 +71,11 @@ if "git" in nb_metadata:
         keep_output = True
 if keep_output:
     sys.stdout.write(nb)
-    exit() 
+    exit()
 
 
-ipy_version = int(json_in["nbformat"])-1 # nbformat is 1 more than actual version.
+ipy_version = int(json_in["nbformat"]) - 1  # nbformat is 1 more than actual version.
+
 
 def strip_output_from_cell(cell):
     if "outputs" in cell:
@@ -93,4 +94,4 @@ else:
     for cell in json_in["cells"]:
         strip_output_from_cell(cell)
 
-json.dump(json_in, sys.stdout, sort_keys=True, indent=1, separators=(",",": "))
+json.dump(json_in, sys.stdout, sort_keys=True, indent=1, separators=(",", ": "))

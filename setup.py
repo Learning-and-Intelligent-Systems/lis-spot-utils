@@ -5,7 +5,7 @@ setup(
     name="spot_utils",
     version="0.1.0",
     packages=[],
-    install_requires=[],
+    install_requires=["open3d"],
     include_package_data=True,
     extras_require={
         "develop": [
