@@ -1,17 +1,9 @@
 from dataclasses import dataclass
-<<<<<<< HEAD
 import numpy as np
 from typing import Optional
 from bosdyn.client.math_helpers import SE3Pose
 
-=======
-from typing import Optional
 
-import numpy as np
-from bosdyn.client.math_helpers import SE3Pose
-
-
->>>>>>> fn issues
 @dataclass
 class Intrinsics():
     rows: int

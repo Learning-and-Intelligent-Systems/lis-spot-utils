@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 from bosdyn.client.image import _depth_image_get_valid_indices, \
     _depth_image_data_to_numpy
 import numpy as np
@@ -8,18 +8,6 @@ from structures.image import RGBDImage, PointCloud
 
 def rgbd_to_pointcloud(rgbd:RGBDImage, min_dist:int=0, max_dist:int=1000) -> PointCloud:
 
-=======
-from typing import List
-
-import numpy as np
-from bosdyn.client.image import (_depth_image_data_to_numpy,
-                                 _depth_image_get_valid_indices)
-
-from spot_utils.structures.image import PointCloud, RGBDImage
-
-
-def rgbd_to_pointcloud(rgbd:RGBDImage, min_dist:int=0, max_dist:int=1000) -> PointCloud:
->>>>>>> fn issues
     # Convert the proto representation into a numpy array.
     depth_array = _depth_image_data_to_numpy(rgbd.depth)
 
@@ -50,7 +38,3 @@ def rgbds_to_pointcloud(rgbds:List[RGBDImage]) -> PointCloud:
     local_pointclouds = [rgbd_to_pointcloud(rgbd) for rgbd in rgbds]
     return PointCloud(xyz=np.concatenate([p.xyz for p in local_pointclouds], axis=0),
                       rgb=np.concatenate([p.rgb for p in local_pointclouds], axis=0))
-<<<<<<< HEAD
-                      
-=======
->>>>>>> fn issues

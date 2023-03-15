@@ -1,23 +1,11 @@
 
-<<<<<<< HEAD
 from bosdyn.client.image import build_image_request
 from bosdyn.api import image_pb2
 from bosdyn.client.frame_helpers import  get_a_tform_b, BODY_FRAME_NAME
 from numpy import np
 import cv2
-
 from spot_utils.structures.robot import RobotClient
 from spot_utils.structures.image import RGBDImage, RGBImage
-=======
-import cv2
-from bosdyn.api import image_pb2
-from bosdyn.client.frame_helpers import BODY_FRAME_NAME, get_a_tform_b
-from bosdyn.client.image import build_image_request
-from numpy import np
-
-from spot_utils.structures.image import DepthImage, RGBDImage, RGBImage
-from spot_utils.structures.robot import RobotClient
->>>>>>> fn issues
 
 CAMERAS = ["frontleft", "frontright", "left", "right", "back", "hand"]
 
@@ -52,9 +40,12 @@ def capture_depth(robot_client:RobotClient, source:str):
 
 def capture_rgbd(robot_client:RobotClient, camera:str, in_frame:str="depth") -> RGBDImage:
 <<<<<<< HEAD
+<<<<<<< HEAD
     
 =======
 >>>>>>> fn issues
+=======
+>>>>>>> 9256dec6e63cd0488292af4fe75ca2aa68c1cb5b
     rgb_source = SOURCES_DEPTH_FRAME[camera] if in_frame == "depth" \
                     else SOURCES_RGB_FRAME[camera]
     depth_source = SOURCES_DEPTH_FRAME[camera] if in_frame == "depth" \
