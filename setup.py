@@ -5,10 +5,7 @@ setup(
     name="spot_utils",
     version="0.1.0",
     packages=[],
-    install_requires=[
-        "open3d",
-        "bosdyn@git+https://github.com/boston-dynamics/spot-sdk.git",
-    ],
+    install_requires=["open3d", "bosdyn-client"],
     include_package_data=True,
     extras_require={
         "develop": [

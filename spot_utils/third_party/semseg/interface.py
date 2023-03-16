@@ -7,7 +7,7 @@ import torch
 import torchvision
 from scipy import io
 
-sys.path.extend(["./"])
+sys.path.extend(["./spot_utils/third_party/semseg"])
 from functools import cache
 
 from mit_semseg.models import ModelBuilder, SegmentationModule
@@ -20,13 +20,13 @@ def get_models():
     net_encoder = ModelBuilder.build_encoder(
         arch="resnet50dilated",
         fc_dim=2048,
-        weights="semseg/ckpt/ade20k-resnet50dilated-ppm_deepsup/encoder_epoch_20.pth",
+        weights="spot_utils/third_party/semseg/ckpt/ade20k-resnet50dilated-ppm_deepsup/encoder_epoch_20.pth",
     )
     net_decoder = ModelBuilder.build_decoder(
         arch="ppm_deepsup",
         fc_dim=2048,
         num_class=150,
-        weights="semseg/ckpt/ade20k-resnet50dilated-ppm_deepsup/decoder_epoch_20.pth",
+        weights="spot_utils/third_party/semseg/ckpt/ade20k-resnet50dilated-ppm_deepsup/decoder_epoch_20.pth",
         use_softmax=True,
     )
 
@@ -39,9 +39,9 @@ def get_models():
 
 @cache
 def get_colors():
-    colors = io.loadmat("semseg/data/color150.mat")["colors"]
+    colors = io.loadmat("spot_utils/third_party/semseg/data/color150.mat")["colors"]
     names = {}
-    with open("semseg/data/object150_info.csv") as f:
+    with open("spot_utils/third_party/semseg/data/object150_info.csv") as f:
         reader = csv.reader(f)
         next(reader)
         for row in reader:

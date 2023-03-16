@@ -41,6 +41,8 @@ def setup_robot(spot_ip: str = LIS_SPOT_IP) -> RobotClient:
         lease_client, must_acquire=True, return_at_exit=True
     )
 
+    robot.power_on(timeout_sec=20)
+
     return RobotClient(
         robot=robot,
         sdk=sdk,

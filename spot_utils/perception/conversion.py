@@ -3,8 +3,7 @@
 from typing import List
 
 import numpy as np
-from bosdyn.client.image import (_depth_image_data_to_numpy,
-                                 _depth_image_get_valid_indices)
+from bosdyn.client.image import _depth_image_get_valid_indices
 
 from spot_utils.structures.image import PointCloud, RGBDImage
 
@@ -15,8 +14,9 @@ def rgbd_to_pointcloud(
     """Converts a single rgbd image to a pointcloud."""
 
     # Convert the proto representation into a numpy array.
-    depth_array = _depth_image_data_to_numpy(rgbd.depth)
+    depth_array = rgbd.depth
 
+    print(depth_array)
     # Determine which indices have valid data in the user requested range.
     valid_inds = _depth_image_get_valid_indices(
         depth_array,

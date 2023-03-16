@@ -56,7 +56,9 @@ def print_feedback(feedback_resp: Any, logger: Any) -> float:
 
 def move_arm(robot_client: RobotClient, arm_pos: ArmJointPositions):
     """Helper function to move the robot joints to a target joint positions."""
-    traj_point = RobotCommandBuilder.create_arm_joint_trajectory_point(*arm_pos)
+    traj_point = RobotCommandBuilder.create_arm_joint_trajectory_point(
+        *arm_pos.to_list()
+    )
     arm_joint_traj = arm_command_pb2.ArmJointTrajectory(points=[traj_point])
     # Make a RobotCommand
 
