@@ -7,7 +7,9 @@ setup(
     packages=[],
     install_requires=[
         "open3d",
-        "bosdyn@git+https://github.com/boston-dynamics/spot-sdk.git",
+        "bosdyn-client",
+        "bosdyn-mission",
+        "bosdyn-choreography-client",
     ],
     include_package_data=True,
     extras_require={
