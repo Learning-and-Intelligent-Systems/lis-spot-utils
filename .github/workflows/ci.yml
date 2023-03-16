@@ -14,8 +14,6 @@ jobs:
           jupyter: true
       - name: Run isort to organize imports
         uses: isort/isort-action@master
-        with:
-          configuration: "--split-on-trailing-comma"
   linting:
     runs-on: ubuntu-latest
     strategy:
@@ -56,4 +54,4 @@ jobs:
         pip install mypy
     - name: Mypy
       run: |
-        mypy . --config-file mypy.ini
+        mypy .

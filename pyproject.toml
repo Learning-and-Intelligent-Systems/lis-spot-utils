@@ -10,8 +10,26 @@ extend-exclude = """
 )
 """
 
+
 [tool.isort]
 py_version=38
 profile = "black"
 multi_line_output = 2
 skip_glob = ["venv/*", "spot_utils/third_party/*"]
+split_on_trailing_comma = true
+
+
+[tool.mypy]
+strict_equality = true
+disallow_untyped_calls = true
+warn_unreachable = true
+exclude = ["venv", "spot_utils/third_party"]
+
+[[tool.mypy.overrides]]
+module = [
+    "setuptools.*",
+    "bosdyn.*",
+    "cv2.*",
+    "open3d.*",
+]
+ignore_missing_imports = true
