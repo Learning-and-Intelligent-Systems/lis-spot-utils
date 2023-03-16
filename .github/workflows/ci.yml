@@ -15,7 +15,7 @@ jobs:
       - name: Run isort to organize imports
         uses: isort/isort-action@master
         with:
-          options: "--split-on-trailing-comma"
+          configuration: "--split-on-trailing-comma"
   linting:
     runs-on: ubuntu-latest
     strategy:
