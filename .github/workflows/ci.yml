@@ -36,7 +36,7 @@ jobs:
         pip install pytest-pylint
     - name: Lint
       run: |
-        pytest . --pylint -m pylint --pylint-rcfile=.pylintrc
+        pytest . --pylint -m pylint --pylint-rcfile=.spot_utils_pylintrc
   static-type-checking:
     runs-on: ubuntu-latest
     strategy:

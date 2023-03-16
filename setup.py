@@ -10,6 +10,7 @@ setup(
         "bosdyn-client",
         "bosdyn-mission",
         "bosdyn-choreography-client",
+        "opencv-python",
     ],
     include_package_data=True,
     extras_require={
