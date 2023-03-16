@@ -1,6 +1,7 @@
 """Functions for controlling the arm on spot."""
 
 import time
+from logging import Logger
 from typing import Any, List
 
 import numpy as np
@@ -23,11 +24,13 @@ def open_gripper(robot_client: RobotClient):
     robot_client.robot.logger.info("Moving arm to position.")
 
 
-def _print_feedback(feedback_resp: Any, logger: Any) -> float:
+def _print_feedback(feedback_resp: Any, logger: Logger) -> float:
     """Helper function to query for ArmJointMove feedback, and print it to the
     console.
 
     Returns the time_to_goal value reported in the feedback
+
+    feedback_resp is a protobuf with type Any
     """
     sync_feedback = feedback_resp.feedback.synchronized_feedback
     arm_feedback = sync_feedback.arm_command_feedback
