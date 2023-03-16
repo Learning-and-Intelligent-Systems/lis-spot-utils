@@ -4,8 +4,7 @@ import time
 from typing import Any, List
 
 import numpy as np
-from bosdyn.api import (arm_command_pb2, robot_command_pb2,
-                        synchronized_command_pb2)
+from bosdyn.api import arm_command_pb2, robot_command_pb2, synchronized_command_pb2
 from bosdyn.client.robot_command import RobotCommandBuilder
 from bosdyn.util import duration_to_seconds
 

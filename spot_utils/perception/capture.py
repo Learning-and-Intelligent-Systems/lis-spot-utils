@@ -9,8 +9,7 @@ from bosdyn.api.image_pb2 import Image
 from bosdyn.client.frame_helpers import BODY_FRAME_NAME, get_a_tform_b
 from bosdyn.client.image import _depth_image_data_to_numpy, build_image_request
 
-from spot_utils.structures.image import (DepthImage, Intrinsics, RGBDImage,
-                                         RGBImage)
+from spot_utils.structures.image import DepthImage, Intrinsics, RGBDImage, RGBImage
 from spot_utils.structures.robot import RobotClient
 
 CAMERAS = ["frontleft", "frontright", "left", "right", "back", "hand"]
