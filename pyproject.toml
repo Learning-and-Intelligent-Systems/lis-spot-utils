@@ -33,3 +33,7 @@ module = [
     "open3d.*",
 ]
 ignore_missing_imports = true
+
+
+[tool.pytest.ini_options]
+addopts = "--ignore=spot_utils/third_party"
