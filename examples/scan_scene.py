@@ -18,7 +18,9 @@ if __name__ == "__main__":
 
     pointcloud = rgbds_to_pointcloud(rgbds)
     point_cloud = o3d.geometry.PointCloud()
-    point_cloud.points = o3d.utility.Vector3dVector(pointcloud.xyz)
-    point_cloud.colors = o3d.utility.Vector3dVector(pointcloud.rgb / 255.0)
+    point_cloud.points = o3d.utility.Vector3dVector(pointcloud.xyz)  # type: ignore
+    point_cloud.colors = o3d.utility.Vector3dVector(  # type: ignore
+        pointcloud.rgb / 255.0  # type: ignore
+    )
 
     o3d.visualization.draw_geometries([point_cloud])

@@ -49,7 +49,7 @@ def get_colors():
     return colors
 
 
-def get_semantic_labels(img_data):
+def get_semantic_labels(img_data) -> np.ndarray:
     segmentation_module = get_models()
     colors = get_colors()
 

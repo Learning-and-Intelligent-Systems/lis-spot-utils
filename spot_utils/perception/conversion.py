@@ -47,6 +47,6 @@ def rgbds_to_pointcloud(rgbds: List[RGBDImage]) -> PointCloud:
     """Converts a set of rgbd images to a global pointcloud."""
     local_pointclouds = [rgbd_to_pointcloud(rgbd) for rgbd in rgbds]
     return PointCloud(
-        np.concatenate([p.xyz for p in local_pointclouds], axis=0),
-        np.concatenate([p.rgb for p in local_pointclouds], axis=0),
+        np.concatenate([p.xyz for p in local_pointclouds], axis=0),  # type: ignore
+        np.concatenate([p.rgb for p in local_pointclouds], axis=0),  # type: ignore
     )

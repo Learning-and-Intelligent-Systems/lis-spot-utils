@@ -52,8 +52,10 @@ def capture_rgb(robot_client: RobotClient, source: str):
         image_responses[0].shot.frame_name_image_sensor,
     )
 
+    data = image_responses[0].shot.image.data
     cv_visual = cv2.imdecode(
-        np.frombuffer(image_responses[0].shot.image.data, dtype=np.uint8), -1
+        np.frombuffer(data, dtype=np.uint8),  # type: ignore
+        -1,
     )
     cv_visual = cv2.cvtColor(cv_visual, cv2.COLOR_BGR2RGB)
 

@@ -36,7 +36,7 @@ class ArmJointPositions:
     wr0: float = 0
     wr1: float = 0
 
-    def to_list(self):
+    def to_list(self) -> List[float]:
         """Converts the arm joints to a list."""
         return [self.sh0, self.sh1, self.el0, self.el1, self.wr0, self.wr1]
 
