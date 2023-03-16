@@ -11,10 +11,10 @@ from bosdyn.client.robot_state import RobotStateClient
 
 from spot_utils.structures.robot import RobotClient
 
-LIS_SPOT_IP = "192.168.80.3"
+DEFAULT_SPOT_IP = "192.168.80.3"
 
 
-def setup_robot(spot_ip: str = LIS_SPOT_IP) -> RobotClient:
+def setup_robot(spot_ip: str = DEFAULT_SPOT_IP) -> RobotClient:
     """Sets up the robot clients and packages them into a RobotClient class."""
     bosdyn.client.util.setup_logging(False)
 

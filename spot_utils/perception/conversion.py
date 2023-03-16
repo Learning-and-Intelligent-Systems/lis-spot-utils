@@ -13,10 +13,8 @@ def rgbd_to_pointcloud(
 ) -> PointCloud:
     """Converts a single rgbd image to a pointcloud."""
 
-    # Convert the proto representation into a numpy array.
     depth_array = rgbd.depth
 
-    print(depth_array)
     # Determine which indices have valid data in the user requested range.
     valid_inds = _depth_image_get_valid_indices(
         depth_array,
@@ -35,9 +33,7 @@ def rgbd_to_pointcloud(
     x = np.multiply(z, (cols - rgbd.intrinsics.cx)) / rgbd.intrinsics.fx
     y = np.multiply(z, (rows - rgbd.intrinsics.cy)) / rgbd.intrinsics.fy
 
-    cv_visual = rgbd.rgb
-    # cv_visual = cv2.cvtColor(cv_visual, cv2.COLOR_BGR2RGB)
-    rgb = np.array(cv_visual[rows, cols])
+    rgb = np.array(rgbd.rgb[rows, cols])
     xyz = np.vstack((x, y, z)).T
 
     return PointCloud(rgbd.frame.transform_cloud(np.array(xyz)), rgb)

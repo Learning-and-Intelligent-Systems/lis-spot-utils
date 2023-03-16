@@ -23,7 +23,7 @@ def open_gripper(robot_client: RobotClient):
     robot_client.robot.logger.info("Moving arm to position.")
 
 
-def print_feedback(feedback_resp: Any, logger: Any) -> float:
+def _print_feedback(feedback_resp: Any, logger: Any) -> float:
     """Helper function to query for ArmJointMove feedback, and print it to the
     console.
 
@@ -54,10 +54,11 @@ def print_feedback(feedback_resp: Any, logger: Any) -> float:
 
 
 def move_arm(robot_client: RobotClient, arm_pos: ArmJointPositions):
-    """Helper function to move the robot joints to a target joint positions."""
+    """Helper function to move the robot joints to target joint positions."""
     traj_point = RobotCommandBuilder.create_arm_joint_trajectory_point(
         *arm_pos.to_list()
     )
+
     arm_joint_traj = arm_command_pb2.ArmJointTrajectory(points=[traj_point])
     # Make a RobotCommand
 
@@ -80,7 +81,7 @@ def move_arm(robot_client: RobotClient, arm_pos: ArmJointPositions):
     # Query for feedback to determine how long the goto will take.
     feedback_resp = robot_client.command_client.robot_command_feedback(cmd_id)
     robot_client.robot.logger.info("Feedback for Example 1: single point goto")
-    time_to_goal = print_feedback(feedback_resp, robot_client.robot.logger)
+    time_to_goal = _print_feedback(feedback_resp, robot_client.robot.logger)
     time.sleep(time_to_goal)
 
 
