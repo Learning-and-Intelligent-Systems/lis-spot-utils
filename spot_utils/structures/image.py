@@ -23,16 +23,18 @@ class Intrinsics:
 class RGBImage:
     """Color image."""
 
-    rgb: np.ndarray[np.int8]
+    rgb: np.ndarray
     frame: SE3Pose
+    intrinsics: Intrinsics
 
 
 @dataclass
 class DepthImage:
     """Depth image."""
 
-    depth: np.ndarray[np.int16]
+    depth: np.ndarray
     frame: SE3Pose
+    intrinsics: Intrinsics
     depth_scale: float = 1
 
 
@@ -40,15 +42,16 @@ class DepthImage:
 class RGBDImage:
     """Color + depth image."""
 
-    rgb: np.ndarray[np.int8]
-    depth: np.ndarray[np.int16]
-    depth_scale: float = 1
+    rgb: np.ndarray
+    depth: np.ndarray
     frame: SE3Pose
+    intrinsics: Intrinsics
+    depth_scale: float = 1
 
 
 @dataclass
 class PointCloud:
     """Cloud of points with positions and colors."""
 
-    points_xyz: np.ndarray[np.float64]
-    points_rgb: Optional[np.ndarray[np.int8]]
+    xyz: np.ndarray
+    rgb: Optional[np.ndarray]

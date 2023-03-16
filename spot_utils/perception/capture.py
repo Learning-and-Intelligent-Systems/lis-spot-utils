@@ -1,13 +1,15 @@
 """Functions for collecting images from different cameras and camera sources on
 the spot."""
 
+from typing import Any
+
 import cv2
+import numpy as np
 from bosdyn.api.image_pb2 import Image
 from bosdyn.client.frame_helpers import BODY_FRAME_NAME, get_a_tform_b
-from bosdyn.client.image import build_image_request
-from numpy import np
+from bosdyn.client.image import _depth_image_data_to_numpy, build_image_request
 
-from spot_utils.structures.image import DepthImage, RGBDImage, RGBImage
+from spot_utils.structures.image import DepthImage, Intrinsics, RGBDImage, RGBImage
 from spot_utils.structures.robot import RobotClient
 
 CAMERAS = ["frontleft", "frontright", "left", "right", "back", "hand"]
@@ -22,6 +24,19 @@ SOURCES_RGB_FRAME = {
     for cam in CAMERAS[:-1]
 }
 SOURCES_RGB_FRAME["hand"] = ("hand_depth_in_hand_color_frame", "hand_color_image")
+
+
+def get_intrinsics(response: Any):
+    """Get the camera intrinsics from an image response."""
+    intrinsics = response.source.pinhole.intrinsics
+    return Intrinsics(
+        response.source.rows,
+        response.source.cols,
+        intrinsics.focal_length.x,
+        intrinsics.focal_length.y,
+        intrinsics.principal_point.x,
+        intrinsics.principal_point.y,
+    )
 
 
 def capture_rgb(robot_client: RobotClient, source: str):
@@ -42,7 +57,7 @@ def capture_rgb(robot_client: RobotClient, source: str):
     )
     cv_visual = cv2.cvtColor(cv_visual, cv2.COLOR_BGR2RGB)
 
-    return RGBImage(rgb=cv_visual, frame=t)
+    return RGBImage(cv_visual, t, get_intrinsics(image_responses[0]))
 
 
 def capture_depth(robot_client: RobotClient, source: str):
@@ -51,36 +66,29 @@ def capture_depth(robot_client: RobotClient, source: str):
     # pylint:disable=no-member
     reqs = [build_image_request(source, pixel_format=Image.PIXEL_FORMAT_DEPTH_U16)]
     image_responses = robot_client.image_client.get_image(reqs)
-
-    frame_transform = get_a_tform_b(
+    t = get_a_tform_b(
         image_responses[0].shot.transforms_snapshot,
         BODY_FRAME_NAME,
         image_responses[0].shot.frame_name_image_sensor,
     )
 
-    cv_dep = cv2.imdecode(
-        np.frombuffer(image_responses[0].shot.image.data, dtype=np.uint16), -1
-    )
+    cv_dep = _depth_image_data_to_numpy(image_responses[0])
 
     return DepthImage(
-        depth=cv_dep,
-        depth_scale=image_responses[0].source.depth_scale,
-        frame=frame_transform,
+        cv_dep,
+        t,
+        get_intrinsics(image_responses[0]),
+        image_responses[0].source.depth_scale,
     )
 
 
 def capture_rgbd(
-    robot_client: RobotClient, camera: str, in_frame: str = "depth"
+    robot_client: RobotClient, camera: str, in_frame: str = "rgb"
 ) -> RGBDImage:
     """Given a camera, capture the RGB/Depth and merge them into and RGBD data
     that is either in the depth frame or image frame depending on the value of
     in_frame."""
-    rgb_source = (
-        SOURCES_DEPTH_FRAME[camera]
-        if in_frame == "depth"
-        else SOURCES_RGB_FRAME[camera]
-    )
-    depth_source = (
+    depth_source, rgb_source = (
         SOURCES_DEPTH_FRAME[camera]
         if in_frame == "depth"
         else SOURCES_RGB_FRAME[camera]
@@ -90,9 +98,13 @@ def capture_rgbd(
     depth = capture_depth(robot_client, depth_source)
 
     rgbd = (
-        RGBDImage(rgb.rgb, depth.depth, depth.depth_scale, depth.frame)
+        RGBDImage(
+            rgb.rgb, depth.depth, depth.frame, depth.intrinsics, depth.depth_scale
+        )
         if in_frame == "depth"
-        else RGBDImage(rgb.rgb, depth.depth, depth.depth_scale, rgb.frame)
+        else RGBDImage(
+            rgb.rgb, depth.depth, rgb.frame, rgb.intrinsics, depth.depth_scale
+        )
     )
 
     return rgbd
