@@ -40,8 +40,8 @@ def get_intrinsics(response: ImageRequest) -> Intrinsics:
 def capture_rgb(robot_client: RobotClient, source: str):
     """Capture just the rgb image with a particular camera source."""
 
-    # pylint:disable=no-member
-    reqs = [build_image_request(source, pixel_format=Image.PIXEL_FORMAT_RGB_U8)]
+    f = Image.PIXEL_FORMAT_RGB_U8  # pylint:disable=no-member
+    reqs = [build_image_request(source, pixel_format=f)]
     image_responses = robot_client.image_client.get_image(reqs)
 
     t = get_a_tform_b(
@@ -63,8 +63,9 @@ def capture_rgb(robot_client: RobotClient, source: str):
 def capture_depth(robot_client: RobotClient, source: str):
     """Capture just the depth image with a particular camera source."""
 
-    # pylint:disable=no-member
-    reqs = [build_image_request(source, pixel_format=Image.PIXEL_FORMAT_DEPTH_U16)]
+    f = Image.PIXEL_FORMAT_DEPTH_U16  # pylint:disable=no-member
+    reqs = [build_image_request(source, pixel_format=f)]
+
     image_responses = robot_client.image_client.get_image(reqs)
     t = get_a_tform_b(
         image_responses[0].shot.transforms_snapshot,
