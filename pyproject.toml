@@ -23,7 +23,7 @@ split_on_trailing_comma = true
 strict_equality = true
 disallow_untyped_calls = true
 warn_unreachable = true
-exclude = ["venv", "spot_utils/third_party"]
+exclude = ["venv/*", "spot_utils/third_party/*"]
 
 [[tool.mypy.overrides]]
 module = [
