@@ -1,11 +1,9 @@
 """Functions for collecting images from different cameras and camera sources on
 the spot."""
 
-from typing import Any
-
 import cv2
 import numpy as np
-from bosdyn.api.image_pb2 import Image
+from bosdyn.api.image_pb2 import Image, ImageRequest
 from bosdyn.client.frame_helpers import BODY_FRAME_NAME, get_a_tform_b
 from bosdyn.client.image import _depth_image_data_to_numpy, build_image_request
 
@@ -26,16 +24,16 @@ SOURCES_RGB_FRAME = {
 SOURCES_RGB_FRAME["hand"] = ("hand_depth_in_hand_color_frame", "hand_color_image")
 
 
-def get_intrinsics(response: Any):
+def get_intrinsics(response: ImageRequest) -> Intrinsics:
     """Get the camera intrinsics from an image response."""
     intrinsics = response.source.pinhole.intrinsics
     return Intrinsics(
-        response.source.rows,
-        response.source.cols,
-        intrinsics.focal_length.x,
-        intrinsics.focal_length.y,
-        intrinsics.principal_point.x,
-        intrinsics.principal_point.y,
+        response.source.rows,  # type: ignore
+        response.source.cols,  # type: ignore
+        intrinsics.focal_length.x,  # type: ignore
+        intrinsics.focal_length.y,  # type: ignore
+        intrinsics.principal_point.x,  # type: ignore
+        intrinsics.principal_point.y,  # type: ignore
     )
 
 
