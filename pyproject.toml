@@ -1,3 +1,31 @@
+[build-system]
+requires = ["setuptools", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "spot_utils"
+version = "0.1.0"
+description = "A number of helpful utilities for doing cool things with the Boston Dynamics Spot Robot!"
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = [
+    "open3d",
+    "bosdyn-client",
+    "bosdyn-mission",
+    "bosdyn-choreography-client",
+    "opencv-python",
+]
+
+[project.optional-dependencies]
+develop = [
+    "black",
+    "docformatter",
+    "isort",
+    "mypy",
+    "pylint>=2.14.5",
+    "pytest-pylint>=0.18.0",
+]
+
 [tool.black]
 line-length = 88
 target-version = ["py38"]
@@ -10,14 +38,12 @@ extend-exclude = """
 )
 """
 
-
 [tool.isort]
 py_version = 38
 profile = "black"
 multi_line_output = 2
 skip_glob = ["venv/*", "spot_utils/third_party/*"]
 split_on_trailing_comma = true
-
 
 [tool.mypy]
 strict_equality = true
@@ -34,7 +60,6 @@ module = [
     "open3d.*",
 ]
 ignore_missing_imports = true
-
 
 [tool.pytest.ini_options]
 addopts = "--ignore=spot_utils/third_party"
